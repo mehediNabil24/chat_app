@@ -1,7 +1,9 @@
+import cloudinary from "../lib/cloudniary.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../model/user.model.js"
 import bcrypt from "bcryptjs"
-import cookie from "cookie-parser"
+
+
 
 export const signup = async (req,res)=>{
     const{fullName, email, password} = req.body
@@ -51,10 +53,113 @@ if(newUser){
     }
 };
 
-export const login = (req,res)=>{
-    res.send("login route")
+export const login = async (req,res)=>{
+    const {email,password} = req.body
+    try{
+        const user = await User.findOne({email})
+
+        if(!user) {
+            return res.status(400).json({message:"Invalid Credentials"})
+        }
+       const isPasswordCorrect= await bcrypt.compare(password,user.password);
+
+       if(!isPasswordCorrect) {
+        return res.status(400).json({message:"Invalid credentials"});
+       }
+
+       generateToken(user._id,res)
+
+       res.status(200).json({
+        _id:user._id,
+        fullName: user.fullName,
+        email:user.email,
+        profilePic:user.profilePic,
+
+       })
+
+    }
+    catch(error){
+        console.log("Error in the login credentails". error.message);
+        res.status(500).json({message:"Internal Server Error"});
+
+    }
 };
 
 export const logout =(req,res)=>{
-    res.send("logout route")
+    try {
+        res.cookie("jwt", "", {maxAge:0})
+        res.status(200).json({message:"Logout succesfuuly"});
+
+    }
+    catch(erro){
+        console.log("Error in the logout controller", error.message);
+        res.status(500).json({message: "Internal Server Error"})
+    }
+}
+
+
+export const updateProfile = async(req,res) =>{
+    try {
+       const {profilePic} = req.body ; 
+      const userID= req.user._id;
+
+      if(!profilePic){
+        return res.status(400).json({message:"Profile pic is required"})
+      }
+     const uploadResponse= await cloudinary.uploader.upload(profilePic)
+     const updateUser = await User.findByIdAndUpdate(userID,{profilePic:uploadResponse.secure_url},{new:true})
+
+     res.status(200).json(updateUser);
+
+    }
+    catch(error){
+        console.log("error in update profile", error);
+        res.status(500).json({message:"internal server error"});
+
+    }
+
+};
+
+// export const updateProfile = async (req, res) => {
+//   try {
+//     const userID = req.user._id;
+
+//     // multer puts the file here
+//     if (!req.file) {
+//       return res.status(400).json({ message: "Profile pic is required" });
+//     }
+
+//     // upload file buffer to cloudinary
+//     const uploadResponse = await cloudinary.uploader.upload(
+//       req.file.buffer,
+//       {
+//         resource_type: "image",
+//       }
+//     );
+
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userID,
+//       { profilePic: uploadResponse.secure_url },
+//       { new: true }
+//     );
+
+//     res.status(200).json(updatedUser);
+//   } catch (error) {
+//     console.log("error in update profile", error);
+//     res.status(500).json({ message: "internal server error" });
+//   }
+// };
+
+
+
+export const checkAuth = (req,res)=>{
+
+    
+    try{
+        res.status(200).json(req.user);
+    }catch (error){
+        console.log("error in checkAuth controller", error.message);
+        res.status(500).json({message:"Internal Server Error"})
+    }
+
 }
