@@ -8,6 +8,7 @@ import Setting from './pages/Setting'
 import { useAuthStore } from '../store/useAuthStore'
 import {Loader} from "lucide-react";
 import {Toaster} from "react-hot-toast";
+import ProfilePage from './pages/Profile'
 
 
 export default function App() {
@@ -29,9 +30,10 @@ export default function App() {
 
    <Routes>
     <Route path='/' element={authUser?<Homepage />: <Navigate to="/login" />}/>
+    <Route path='/profile' element={authUser?<ProfilePage />: <Navigate to="/login" />}/>
     {/* <Route path='/signup' element={authUser?<SIgnup />:<Navigate to="/login"/>} /> */}
     <Route path='/login' element={!authUser?<Login /> :<Navigate to="/"/>} />
-    <Route path='/signup' element={<SIgnup />} />
+    <Route path='/signup' element={!authUser?<SIgnup />:<Navigate to="/"/>} />
     <Route path='/setting' element={<Setting />} />
 
    </Routes>
