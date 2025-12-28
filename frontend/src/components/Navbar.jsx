@@ -23,7 +23,7 @@ const Navbar = () => {
                 <img
                   src="/love.svg"
                   alt="Sadi Logo"
-                  className="w-5 h-5"
+                  className="w-7 h-7"
                 />
               </div>
               <h1 className="text-lg font-bold">Sadi💖</h1>
