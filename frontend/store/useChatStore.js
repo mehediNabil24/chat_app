@@ -60,41 +60,37 @@ export const useChatStore = create((set,get) =>({
 
     },
 
-    subscribeToMessages: ()=>{
-        const {selectedUser} = get();
-        if(!selectedUser) return;
+   subscribeToMessages: () => {
+  const socket = useAuthStore.getState().socket;
+  if (!socket) return;
 
-        const socket = useAuthStore.getState().socket;
+  socket.off("new-message"); // prevent duplicate listeners
 
-        // socket?.on("new-message", (newMessage)=>{
-        //     if(newMessage.senderId !== selectedUser._id) return;
-        //     set({
-        //         messages: [...get().messages, newMessage]
-        //     })
-        // })
-
-        socket?.on("new-message", (newMessage) => {
-    const { selectedUser } = get();
+  socket.on("new-message", (newMessage) => {
+    const { selectedUser, messages } = get();
     const authUser = useAuthStore.getState().authUser;
+    if (!authUser) return;
 
     const isMyMessage = newMessage.senderId === authUser._id;
     const isChatOpen = newMessage.senderId === selectedUser?._id;
     const isWindowFocused = document.hasFocus();
 
-    // 🔊 PLAY SOUND when needed
+    // 🔊 PLAY SOUND
     if (!isMyMessage && (!isChatOpen || !isWindowFocused)) {
-        notificationSound.play();
+      notificationSound
+        .play()
+        .catch(err =>
+          console.warn("🔇 Sound blocked:", err.message)
+        );
     }
 
-    // Only add message if current chat is open
+    // Add message ONLY if current chat is open
     if (isChatOpen) {
-        set({
-            messages: [...get().messages, newMessage],
-        });
+      set({ messages: [...messages, newMessage] });
     }
-});
+  });
+},
 
-    },
 
     unsubscribeFromMessages: ()=>{
         const socket = useAuthStore.getState().socket;
