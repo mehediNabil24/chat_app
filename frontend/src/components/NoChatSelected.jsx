@@ -11,7 +11,12 @@ const NoChatSelected = () => {
               className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center
              justify-center animate-bounce"
             >
-              <MessageSquare className="w-8 h-8 text-primary " />
+              {/* <MessageSquare className="w-8 h-8 text-primary " /> */}
+              <img
+                src="/love.svg"
+                alt="Sadi Logo"
+                className="w-8 h-8"
+              />
             </div>
           </div>
         </div>
