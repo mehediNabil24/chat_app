@@ -4,6 +4,9 @@ import toast from  "react-hot-toast";
 import {axiosInstance} from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
+const notificationSound = new Audio("/notification.mp3");
+
+
 
 export const useChatStore = create((set,get) =>({
     messages: [],
@@ -63,12 +66,34 @@ export const useChatStore = create((set,get) =>({
 
         const socket = useAuthStore.getState().socket;
 
-        socket?.on("new-message", (newMessage)=>{
-            if(newMessage.senderId !== selectedUser._id) return;
-            set({
-                messages: [...get().messages, newMessage]
-            })
-        })
+        // socket?.on("new-message", (newMessage)=>{
+        //     if(newMessage.senderId !== selectedUser._id) return;
+        //     set({
+        //         messages: [...get().messages, newMessage]
+        //     })
+        // })
+
+        socket?.on("new-message", (newMessage) => {
+    const { selectedUser } = get();
+    const authUser = useAuthStore.getState().authUser;
+
+    const isMyMessage = newMessage.senderId === authUser._id;
+    const isChatOpen = newMessage.senderId === selectedUser?._id;
+    const isWindowFocused = document.hasFocus();
+
+    // 🔊 PLAY SOUND when needed
+    if (!isMyMessage && (!isChatOpen || !isWindowFocused)) {
+        notificationSound.play();
+    }
+
+    // Only add message if current chat is open
+    if (isChatOpen) {
+        set({
+            messages: [...get().messages, newMessage],
+        });
+    }
+});
+
     },
 
     unsubscribeFromMessages: ()=>{
