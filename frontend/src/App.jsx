@@ -15,7 +15,8 @@ import SettingsPage from './pages/Setting'
 
 export default function App() {
 
-  const {authUser, checkAuth,isCheckingAuth} = useAuthStore();
+  const {authUser, checkAuth,isCheckingAuth, onlineUsers} = useAuthStore();
+  console.log('online users in app.jsx', onlineUsers)
   const {theme} =useThemeStore();
   useEffect(()=>{
     checkAuth()
