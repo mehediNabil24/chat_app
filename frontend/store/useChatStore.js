@@ -4,7 +4,7 @@ import toast from  "react-hot-toast";
 import {axiosInstance} from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
-const notificationSound = new Audio("/notification.mp3");
+// const notificationSound = new Audio("/notification.mp3");
 
 
 
@@ -60,37 +60,19 @@ export const useChatStore = create((set,get) =>({
 
     },
 
-   subscribeToMessages: () => {
-  const socket = useAuthStore.getState().socket;
-  if (!socket) return;
+    subscribeToMessages: ()=>{
+        const {selectedUser} = get();
+        if(!selectedUser) return;
 
-  socket.off("new-message"); // prevent duplicate listeners
+        const socket = useAuthStore.getState().socket;
 
-  socket.on("new-message", (newMessage) => {
-    const { selectedUser, messages } = get();
-    const authUser = useAuthStore.getState().authUser;
-    if (!authUser) return;
-
-    const isMyMessage = newMessage.senderId === authUser._id;
-    const isChatOpen = newMessage.senderId === selectedUser?._id;
-    const isWindowFocused = document.hasFocus();
-
-    // 🔊 PLAY SOUND
-    if (!isMyMessage && (!isChatOpen || !isWindowFocused)) {
-      notificationSound
-        .play()
-        .catch(err =>
-          console.warn("🔇 Sound blocked:", err.message)
-        );
-    }
-
-    // Add message ONLY if current chat is open
-    if (isChatOpen) {
-      set({ messages: [...messages, newMessage] });
-    }
-  });
-},
-
+        socket?.on("new-message", (newMessage)=>{
+            if(newMessage.senderId !== selectedUser._id) return;
+            set({
+                messages: [...get().messages, newMessage]
+            })
+        })
+    },
 
     unsubscribeFromMessages: ()=>{
         const socket = useAuthStore.getState().socket;
