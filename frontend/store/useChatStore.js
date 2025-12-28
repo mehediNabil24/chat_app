@@ -4,7 +4,7 @@ import toast from  "react-hot-toast";
 import {axiosInstance} from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
-// const notificationSound = new Audio("/notification.mp3");
+const notificationSound = new Audio("/notification.mp3");
 
 
 
@@ -60,19 +60,26 @@ export const useChatStore = create((set,get) =>({
 
     },
 
-    subscribeToMessages: ()=>{
-        const {selectedUser} = get();
-        if(!selectedUser) return;
+  subscribeToMessages: () => {
+    const socket = useAuthStore.getState().socket;
 
-        const socket = useAuthStore.getState().socket;
+    socket?.on("new-message", (newMessage) => {
+        const { selectedUser, messages } = get();
 
-        socket?.on("new-message", (newMessage)=>{
-            if(newMessage.senderId !== selectedUser._id) return;
-            set({
-                messages: [...get().messages, newMessage]
-            })
-        })
-    },
+        // ✅ If user is NOT in that chat → play sound
+        if (!selectedUser || newMessage.senderId !== selectedUser._id) {
+            notificationSound.play().catch(() => {});
+            toast.success(`New message from ${newMessage.senderName || "Someone"}`);
+            return;
+        }
+
+        // ✅ If user IS in the chat → just append message
+        set({
+            messages: [...messages, newMessage],
+        });
+    });
+},
+
 
     unsubscribeFromMessages: ()=>{
         const socket = useAuthStore.getState().socket;
