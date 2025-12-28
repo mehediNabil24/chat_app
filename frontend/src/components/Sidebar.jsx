@@ -5,7 +5,7 @@ import { Users } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 
 export const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUserdLoading } =
+  const { getUsers, users, selectedUser, setSelectedUser, isUserdLoading,unreadCounts } =
     useChatStore()
 
   const { onlineUsers } = useAuthStore()
@@ -70,22 +70,42 @@ export const Sidebar = () => {
               }
             `}
           >
-            <div className="relative">
-              <img
-                src={user.profilePic || '/avatar.png'}
-                alt={user.name}
-                className="size-12 object-cover rounded-full"
-              />
-              {onlineUsers.includes(user._id) && (
-                <span
-                  className="
-                    absolute bottom-0 right-0 size-3
-                    bg-green-500 rounded-full
-                    ring-2 ring-zinc-900
-                  "
-                />
-              )}
-            </div>
+          <div className="relative">
+  <img
+    src={user.profilePic || '/avatar.png'}
+    alt={user.name}
+    className="size-12 object-cover rounded-full"
+  />
+
+  {/* 🟢 online dot */}
+  {onlineUsers.includes(user._id) && (
+    <span
+      className="
+        absolute bottom-0 right-0 size-3
+        bg-green-500 rounded-full
+        ring-2 ring-zinc-900
+      "
+    />
+  )}
+
+  {/* 🔴 unread count */}
+  {unreadCounts[user._id] > 0 && (
+    <span
+      className="
+        absolute -top-1 -right-1
+        min-w-[20px] h-5
+        px-1
+        bg-red-500 text-white text-xs
+        rounded-full
+        flex items-center justify-center
+        font-semibold
+      "
+    >
+      {unreadCounts[user._id]}
+    </span>
+  )}
+</div>
+
 
             {/* User info — visible on ALL screens now */}
             <div className="text-left min-w-0">

@@ -11,7 +11,8 @@ const notificationSound = new Audio("/notification.mp3");
 export const useChatStore = create((set,get) =>({
     messages: [],
     users: [],
-    selectedUser: null,
+    selectedUser: null, 
+    unreadCounts: {}, // 👈 NEW
     isUserLoading: false,
     isMessagesLoading: false,
 
@@ -60,20 +61,32 @@ export const useChatStore = create((set,get) =>({
 
     },
 
-  subscribeToMessages: () => {
+subscribeToMessages: () => {
     const socket = useAuthStore.getState().socket;
 
     socket?.on("new-message", (newMessage) => {
-        const { selectedUser, messages } = get();
+        const { selectedUser, messages, unreadCounts } = get();
+        const authUser = useAuthStore.getState().authUser;
 
-        // ✅ If user is NOT in that chat → play sound
+        // ❌ ignore own messages
+        if (newMessage.senderId === authUser._id) return;
+
+        // 🔔 message from another chat
         if (!selectedUser || newMessage.senderId !== selectedUser._id) {
             notificationSound.play().catch(() => {});
-            toast.success(`New message from ${newMessage.senderName || "Someone"}`);
+
+            set({
+                unreadCounts: {
+                    ...unreadCounts,
+                    [newMessage.senderId]:
+                        (unreadCounts[newMessage.senderId] || 0) + 1,
+                },
+            });
+
             return;
         }
 
-        // ✅ If user IS in the chat → just append message
+        // ✅ message for currently open chat
         set({
             messages: [...messages, newMessage],
         });
@@ -81,11 +94,20 @@ export const useChatStore = create((set,get) =>({
 },
 
 
+
     unsubscribeFromMessages: ()=>{
         const socket = useAuthStore.getState().socket;
         socket?.off("new-message");
     },
 
-    setSelectedUser: (selectedUser)=> set({selectedUser}),
+   setSelectedUser: (selectedUser) =>
+    set((state) => ({
+        selectedUser,
+        unreadCounts: {
+            ...state.unreadCounts,
+            [selectedUser._id]: 0, // 👈 reset
+        },
+    })),
+
 
 }));
