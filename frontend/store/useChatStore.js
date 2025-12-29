@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import toast from  "react-hot-toast";
+import { persist } from "zustand/middleware"; // 👈 ADD THIS
 
 import {axiosInstance} from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
@@ -8,13 +9,16 @@ const notificationSound = new Audio("/notification.mp3");
 
 
 
-export const useChatStore = create((set,get) =>({
-    messages: [],
-    users: [],
-    selectedUser: null, 
-    unreadCounts: {}, // 👈 NEW
-    isUserLoading: false,
-    isMessagesLoading: false,
+export const useChatStore = create(
+  persist(
+    (set, get) => ({
+      messages: [],
+      users: [],
+      selectedUser: null,
+      unreadCounts: {},
+      isUserLoading: false,
+      isMessagesLoading: false,
+
 
 
     getUsers: async()=>{
@@ -28,7 +32,7 @@ export const useChatStore = create((set,get) =>({
             toast.error(error.response.data.message);
         }
         finally{
-            set({isUserLaoding:false});
+            set({isUserLoading:false});
         }
 
     },
@@ -42,7 +46,7 @@ export const useChatStore = create((set,get) =>({
             toast.error(error.response.data.message);
         }
         finally{
-            set({isMessageLaoding:false});
+            set({isMessageLoading:false});
         }
 
     },
@@ -100,14 +104,26 @@ subscribeToMessages: () => {
         socket?.off("new-message");
     },
 
-   setSelectedUser: (selectedUser) =>
-    set((state) => ({
-        selectedUser,
-        unreadCounts: {
-            ...state.unreadCounts,
-            [selectedUser._id]: 0, // 👈 reset
-        },
-    })),
+      setSelectedUser: (selectedUser) =>
+        set((state) => {
+          if (!selectedUser) return { selectedUser: null };
+
+          return {
+            selectedUser,
+            unreadCounts: {
+              ...state.unreadCounts,
+              [selectedUser._id]: 0,
+            },
+          };
+        }),
+    }),
+    {
+      name: "chat-unread-storage",
+      partialize: (state) => ({
+        unreadCounts: state.unreadCounts,
+      }),
+
+
 
 
 }));

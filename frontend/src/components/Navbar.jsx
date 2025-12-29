@@ -27,6 +27,7 @@ const Navbar = () => {
                 />
               </div>
               <h1 className="text-lg font-bold">Sadi💖</h1>
+              {/* <h1 className="text-lg font-bold">Sadi</h1> */}
             </Link>
           </div>
 

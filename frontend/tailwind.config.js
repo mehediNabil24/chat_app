@@ -14,6 +14,7 @@ export default {
       "retro",
       "synthwave",
       "cyberpunk",
+      'black',
       // ... add more if you want
     ],
   },
